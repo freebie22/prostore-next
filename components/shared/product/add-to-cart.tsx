@@ -12,13 +12,13 @@ const AddToCart = ({ item }: { item: CartItem }) => {
   const handleAddToCart = async () => {
     const res = await addItemToCart(item);
 
-    if (!res.success) {
-      toast.error(res.message);
+    if (!res?.success) {
+      toast.error(res?.message);
       return;
     }
 
     //Handle success add to cart
-    toast.success(`${item.name} added to cart`, {
+    toast.success(res?.message, {
       classNames: {
         actionButton: "bg-primary text-white hover:bg-gray-800",
       },
@@ -30,9 +30,9 @@ const AddToCart = ({ item }: { item: CartItem }) => {
   };
 
   return (
-    <Button className="w*full" type="button" onClick={handleAddToCart}>
+    <Button className="w-full" type="button" onClick={handleAddToCart}>
       <Plus />
-      AddToCart
+      Add To Cart
     </Button>
   );
 };
