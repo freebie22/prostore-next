@@ -1,8 +1,12 @@
 "use server";
 
-import { signInFormShecma, signUpFormSchema } from "../validators";
+import {
+  shippingAddressSchema,
+  signInFormShecma,
+  signUpFormSchema,
+} from "../validators";
 
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
@@ -10,6 +14,8 @@ import { hashSync } from "bcrypt-ts-edge";
 
 import { prisma } from "@/db/prisma";
 import { formartError } from "../utils";
+import { ShippingAddress } from "@/types";
+import { success } from "zod";
 
 //Sign in the user with credentials
 
@@ -71,5 +77,44 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
     }
 
     return { success: false, message: "User has not been registered" };
+  }
+}
+
+// Get user by Id
+
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findFirst({ where: { id: userId } });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+}
+
+// Update the user's address
+export async function updateUserAddress(data: ShippingAddress) {
+  try {
+    const session = await auth();
+
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id },
+    });
+
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    const address = shippingAddressSchema.parse(data);
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { address },
+    });
+
+    return { success: true, message: "User updated successfully" };
+  } catch (error) {
+    return {
+      success: false,
+      message: "An error occured while updating user address",
+    };
   }
 }
